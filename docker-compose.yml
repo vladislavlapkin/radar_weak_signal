@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-signals}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-signals_pwd}
+      POSTGRES_DB: ${POSTGRES_DB:-weak_signals}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg2://signals:signals_pwd@db:5432/weak_signals
+      YANDEX_API_KEY: ${YANDEX_API_KEY:-}
+      YANDEX_FOLDER_ID: ${YANDEX_FOLDER_ID:-}
+      YANDEX_LITE_MODEL: ${YANDEX_LITE_MODEL:-yandexgpt-lite/latest}   # YandexGPT Lite 5
+      YANDEX_PRO_MODEL: ${YANDEX_PRO_MODEL:-yandexgpt/rc}             # YandexGPT Pro 5.1
+      GIGACHAT_CLIENT_ID: ${GIGACHAT_CLIENT_ID:-}
+      GIGACHAT_CLIENT_SECRET: ${GIGACHAT_CLIENT_SECRET:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ml/artifacts:/srv/ml/artifacts   # переобученная модель подхватывается после restart api
+    depends_on:
+      - db
+  train:   # docker compose run --rm train
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    profiles: ["train"]
+    volumes:
+      - ./:/srv
+    command: python -m ml.train --positives data/dataset.xlsx --negatives data/negatives.xlsx
+  web:   # React-дашборд, nginx проксирует /api на FastAPI
+    build:
+      context: ./web
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+volumes:
+  pgdata:

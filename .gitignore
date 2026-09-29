@@ -1,0 +1,20 @@
+# секреты
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# фронтенд
+web/node_modules/
+web/dist/
+
+# датасет организаторов не публикуем: положите его в data/dataset.xlsx (см. README)
+data/dataset.xlsx
+ml/artifacts/predictions.csv
+
+# рабочие черновики команды
+docs/presentation*.md
+.claude/
+ml/artifacts/prepared_dataset.csv

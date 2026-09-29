@@ -1,0 +1,43 @@
+@startuml
+title Радар слабых сигналов — архитектура
+
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+package "Этап 1: обучение" {
+  database "dataset.xlsx\n(100 слабых сигналов)" as DS
+  database "negatives.xlsx\n(53 негатива)" as NG
+  [Очистка и защита от утечек\nml/dataset.py] as CLEAN
+  [16 признаков-критериев\nml/features.py] as FEAT
+  [Логистическая регрессия\n+ валидация 5x5 CV\nml/train.py] as TRAIN
+  artifact "model.pkl\nreport.md" as MODEL
+  DS --> CLEAN
+  NG --> CLEAN
+  CLEAN --> FEAT
+  FEAT --> TRAIN
+  TRAIN --> MODEL
+}
+
+package "Этап 2: открытый запрос" {
+  [React-дашборд\nweb/] as UI
+  [FastAPI\napi/main.py] as API
+  [Перевод запроса\ncollectors/query.py] as QRY
+  [Сборщики: arXiv, OpenAlex,\nвеб RU, новости EN\ncollectors/] as COL
+  [Кластеризация\ncollectors/pipeline.py] as CL
+  [Скоринг: правила WSS + ML\nanalysis/cards.py] as SCORE
+  [Фильтр мейнстрима\nscoring/maturity_filter.py] as FILTER
+  [YandexGPT Lite 5 / Pro 5.1\nllm/router.py] as LLM
+  database "PostgreSQL\ndb/" as DB
+}
+
+UI --> API : POST /search
+API --> QRY
+QRY --> LLM
+QRY --> COL
+COL --> CL
+CL --> SCORE
+MODEL ..> SCORE
+SCORE --> FILTER
+FILTER --> LLM : инсайт по источникам
+API --> DB : запросы, документы,\nсигналы, журнал LLM
+@enduml
