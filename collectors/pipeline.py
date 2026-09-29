@@ -26,7 +26,7 @@ TITLE_CUT = re.compile(r"\s*(?::|\s[—–-]\s|\s\|\s)\s*")
 SOURCES = {"arxiv": "arXiv", "openalex": "OpenAlex", "web_ru": "Веб (RU)", "news_en": "Новости (EN)"}
 
 
-def collect(tr: dict, limit_each: int = 15) -> tuple[list[dict], dict]:
+def collect(tr: dict, limit_each: int = 25) -> tuple[list[dict], dict]:
     """tr — результат collectors.query.translate_query. Возвращает документы и счётчики по источникам."""
     terms = tr.get("terms") or [tr["en"]]
     with ThreadPoolExecutor(max_workers=4) as ex:
@@ -34,7 +34,7 @@ def collect(tr: dict, limit_each: int = 15) -> tuple[list[dict], dict]:
             "arxiv": ex.submit(arxiv_collector.search, terms, limit_each),
             "openalex": ex.submit(openalex_collector.search, tr["en"], limit_each),
             "web_ru": ex.submit(ddg_collector.search, f"{tr['ru']} новые технологии {date.today().year}", limit_each),
-            "news_en": ex.submit(ddg_collector.news, f"{tr['en']} startup", 10),
+            "news_en": ex.submit(ddg_collector.news, f"{tr['en']} startup", 15),
         }
         found = {k: f.result() for k, f in futures.items()}
     seen, docs = set(), []
@@ -73,7 +73,7 @@ def clean_title(title: str, max_words: int = 10) -> str:
     return t[:1].upper() + t[1:]
 
 
-def cluster_to_candidates(docs: list[dict], query_terms: list[str], max_clusters: int = 24) -> list[dict]:
+def cluster_to_candidates(docs: list[dict], query_terms: list[str], max_clusters: int = 32) -> list[dict]:
     """KMeans по TF-IDF; кандидат = кластер, названный по ключевым фразам."""
     if not docs:
         return []
