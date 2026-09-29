@@ -7,6 +7,7 @@
 
 | Документ | Что внутри |
 |---|---|
+| [docs/technical_documentation.md](docs/technical_documentation.md) | **полная техническая документация**: пайплайн данных, отбор признаков, модель, скоринг, API, развёртывание |
 | [docs/methodology.md](docs/methodology.md) | методология: определение слабого сигнала, пайплайн данных, отбор признаков |
 | [docs/architecture.md](docs/architecture.md) | схема архитектуры (Mermaid, [PlantUML](docs/architecture.puml)) |
 | [ml/artifacts/report.md](ml/artifacts/report.md) | отчёт об оценке модели: Precision, Recall, F1, контроль утечек, веса признаков |
